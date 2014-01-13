@@ -1,7 +1,12 @@
 (ns hickory.core
   (:require [hickory.utils :as utils]
             [clojure.zip :as zip]
+            [node-hickory :as nh]
             [goog.string :as gstring]))
+
+(def ^:private on-node?
+  (and (= (type js/require) "function")
+       (js/require "http")))
 
 ;;
 ;; Protocols
@@ -146,11 +151,17 @@
     (.write doc s)
     doc))
 
+(defn parse-dom-with-node
+  [s]
+  (when on-node?
+    (nh/parse s)))
+
 (defn parse
   "Parse an entire HTML document into a DOM structure that can be
    used as input to as-hiccup or as-hickory."
   [s]
-  (or (parse-dom-with-domparser s) (parse-dom-with-write s)))
+  (or (parse-dom-with-domparser s) (parse-dom-with-write s)
+      (parse-dom-with-node s)))
 
 (defn parse-fragment
   "Parse an HTML fragment (some group of tags that might be at home somewhere
